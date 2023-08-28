@@ -1,0 +1,4 @@
+services:
+  parkiran_bus_backend:
+    image: parkiran_bus_backend
+    build: .
