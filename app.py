@@ -1,28 +1,34 @@
-import firebase_admin
-from firebase_admin import db, credentials
+from firebase_admin import initialize_app, db, credentials
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, Updater
 from typing import Final
 from telegram import Update
 from dotenv import load_dotenv
-import googlemaps
+from googlemaps import Client
 import pandas as pd
-import os
+from os import getenv
+import pyshorteners
+
 
 load_dotenv()
 
 # Inisialisasi Firebase Admin SDK
 cred = credentials.Certificate('serviceAccountKey.json')
-firebase_admin.initialize_app(cred, {
+initialize_app(cred, {
     'databaseURL': 'https://parkir-bus-malioboro-default-rtdb.asia-southeast1.firebasedatabase.app'
 })
 
 #Inisialisasi Bot Telegram
-TELEGRAM_BOT_TOKEN: Final = os.getenv('TELEGRAM_BOT_TOKEN')
+TELEGRAM_BOT_TOKEN: Final = getenv('TELEGRAM_BOT_TOKEN')
 BOT_USERNAME: Final = '@busrestMalioboro_bot'
 
 # Inisialisasi Google Maps API
-gmaps = googlemaps.Client(key=os.getenv('GOOGLE_MAPS_API_KEY'))
+gmaps = Client(key=getenv('GOOGLE_MAPS_API_KEY'))
 gmaps_base_url = 'https://www.google.com/maps/dir/?api=1&'
+
+# Fungsi URL shorteners
+def url_short(url):
+    s = pyshorteners.Shortener()
+    return s.tinyurl.short(url)
 
 #Fungsi Firebase
 def fb_query(parkiran_bus='/', db=db):
@@ -96,20 +102,23 @@ async def direction_command(update, context: ContextTypes.DEFAULT_TYPE):
         alt_1 = result.iloc[1].to_dict()
         alt_2 = result.iloc[2].to_dict()
         if best_loc:
+            best_loc_url = url_short(f'{gmaps_base_url}destination={best_loc["destination"].replace(" ", "+")}&travelmode=car&dir_action=navigate')
+            alt_1_url = url_short(f'{gmaps_base_url}destination={alt_1["destination"].replace(" ", "+")}&travelmode=car&dir_action=navigate')
+            alt_2_url = url_short(f'{gmaps_base_url}destination={alt_2["destination"].replace(" ", "+")}&travelmode=car&dir_action=navigate')
             await update.message.reply_text(
                 f'Berdasarkan lokasi anda, \n'
                 f'Opsi terdekat : {best_loc["destination"]}\n'
                 f'Perkiraan waktu tiba : {best_loc["duration"]}\n'
                 f'Slot tersedia saat ini: {best_loc["slot_kosong"]}\n'
-                f'Link Google Maps : {gmaps_base_url}destination={best_loc["destination"].replace(" ", "+")}&travelmode=car&dir_action=navigate\n\n'
+                f'Link Google Maps : {best_loc_url}\n\n'
                 f'Alternatif ke-1 : {alt_1["destination"]}\n'
                 f'Perkiraan waktu tiba : {alt_1["duration"]}\n'
                 f'Slot tersedia saat ini: {alt_1["slot_kosong"]}\n'
-                f'Link Google Maps : {gmaps_base_url}destination={alt_1["destination"].replace(" ", "+")}&travelmode=car&dir_action=navigate\n\n'
+                f'Link Google Maps : {alt_1_url}\n\n'
                 f'Alternatif ke-2 : {alt_2["destination"]}\n'
                 f'Perkiraan waktu tiba : {alt_2["duration"]}\n'
                 f'Slot tersedia saat ini: {alt_2["slot_kosong"]}\n'
-                f'Link Google Maps : {gmaps_base_url}destination={alt_2["destination"].replace(" ", "+")}&travelmode=car&dir_action=navigate\n\n'
+                f'Link Google Maps : {alt_2_url}\n\n'
                 )
     else:
         await update.message.reply_text('Please send me your location...')
@@ -119,12 +128,12 @@ if __name__ == '__main__':
     app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
     app.add_handler(CommandHandler('start', start_command))
-    # app.add_handler(CommandHandler('abu_bakar_ali', abu_bakar_ali_command))
-    # app.add_handler(CommandHandler('ngabean', ngabean_command))
-    # app.add_handler(CommandHandler('senopati', senopati_command))
     app.add_handler(CommandHandler('cek_lokasi',check_command))
     app.add_handler(CommandHandler('pilih_lokasi',direction_command))
     app.add_handler(MessageHandler(filters.LOCATION, direction_command))
+    # app.add_handler(CommandHandler('abu_bakar_ali', abu_bakar_ali_command))
+    # app.add_handler(CommandHandler('ngabean', ngabean_command))
+    # app.add_handler(CommandHandler('senopati', senopati_command))
     # app.add_handler(CommandHandler('destination',destination))
     #app.add_handler(CommandHandler('help', help_command))
 
