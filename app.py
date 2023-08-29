@@ -30,7 +30,7 @@ def fb_query(parkiran_bus='/', db=db):
 
 #Fungsi Google Maps
 def maps_eta(source, destination):
-    result = gmaps.distance_matrix(source, destination, mode = 'driving')
+    result = gmaps.distance_matrix(source, destination, mode = 'driving', language = 'id')
     duration_text = result['rows'][0]['elements'][0]['duration']['text']
     duration_sec = result['rows'][0]['elements'][0]['duration']['value']
     return destination, duration_text, duration_sec
@@ -93,9 +93,24 @@ async def direction_command(update, context: ContextTypes.DEFAULT_TYPE):
         
         result = location_sort(source)
         best_loc = result.iloc[0].to_dict()
+        alt_1 = result.iloc[1].to_dict()
+        alt_2 = result.iloc[2].to_dict()
         if best_loc:
-            await update.message.reply_text(f'Berdasarkan lokasi anda, parkiran terdekat adalah {best_loc["destination"]} dengan perkiraan waktu tiba adalah {best_loc["duration"]} dan slot kosong sejumlah {best_loc["slot_kosong"]}')
-            await update.message.reply_text(f'{gmaps_base_url}destination={best_loc["destination"].replace(" ", "+")}&travelmode=car&dir_action=navigate')
+            await update.message.reply_text(
+                f'Berdasarkan lokasi anda, \n'
+                f'Opsi terdekat : {best_loc["destination"]}\n'
+                f'Perkiraan waktu tiba : {best_loc["duration"]}\n'
+                f'Slot tersedia saat ini: {best_loc["slot_kosong"]}\n'
+                f'Link Google Maps : {gmaps_base_url}destination={best_loc["destination"].replace(" ", "+")}&travelmode=car&dir_action=navigate\n\n'
+                f'Alternatif ke-1 : {alt_1["destination"]}\n'
+                f'Perkiraan waktu tiba : {alt_1["duration"]}\n'
+                f'Slot tersedia saat ini: {alt_1["slot_kosong"]}\n'
+                f'Link Google Maps : {gmaps_base_url}destination={alt_1["destination"].replace(" ", "+")}&travelmode=car&dir_action=navigate\n\n'
+                f'Alternatif ke-2 : {alt_2["destination"]}\n'
+                f'Perkiraan waktu tiba : {alt_2["duration"]}\n'
+                f'Slot tersedia saat ini: {alt_2["slot_kosong"]}\n'
+                f'Link Google Maps : {gmaps_base_url}destination={alt_2["destination"].replace(" ", "+")}&travelmode=car&dir_action=navigate\n\n'
+                )
     else:
         await update.message.reply_text('Please send me your location...')
 
