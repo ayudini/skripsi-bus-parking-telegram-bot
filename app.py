@@ -14,7 +14,7 @@ load_dotenv()
 # Inisialisasi Firebase Admin SDK
 cred = credentials.Certificate('serviceAccountKey.json')
 initialize_app(cred, {
-    'databaseURL': 'https://parkir-bus-malioboro-default-rtdb.asia-southeast1.firebasedatabase.app'
+    'databaseURL': 'URL_FIREBASE'
 })
 
 #Inisialisasi Bot Telegram
