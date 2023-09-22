@@ -14,7 +14,7 @@ load_dotenv()
 # Inisialisasi Firebase Admin SDK
 cred = credentials.Certificate('serviceAccountKey.json')
 initialize_app(cred, {
-    'databaseURL': 'URL_FIREBASE'
+    'databaseURL': getenv('URL_FIREBASE')
 })
 
 #Inisialisasi Bot Telegram
@@ -64,30 +64,37 @@ def location_sort(source):
     output.sort_values(by=['duration_in_sec'], inplace=True)
     return output
 
-# Untuk Araaaaa
-# 'Slot Isi: ' + str(hasil_firebase['slot_isi']) + 'Slot Kosong: ' + str(hasil_firebase['slot_kosong'])
+
 
 # Fungsi untuk mengirim pesan ke Telegram
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-     await update.message.reply_text('Silahkan pilih menu: \n/pilih_lokasi \n/cek_lokasi')
+     await update.message.reply_text('Selamat datang di bot Sistem Informasi Parkir Bus Malioboro! \n Silahkan pilih menu: \n/cekparkir_list \n/cekparkir_terdekat')
+
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text('Ini adalah menu bantuan bot:\nKlik /start untuk memulai.\nKlik /cekparkir_list untuk informasi parkiran.\nKlik /cekparkir_terdekat untuk rekomendasi parkir terdekat dari Anda.')
+
+async def list_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text('Berikut merupakan parkir khusus Bus resmi, silahkan pilih yang ingin di cek : \n/abu_bakar_ali \n/ngabean \n/senopati \n/semua_parkiran')
 
 async def check_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     all_parkiran = fb_query()
+    res = ''
     for parkiran in all_parkiran:
         hasil_firebase = fb_query(f'/{parkiran}')
-        await update.message.reply_text(f'Nama: {hasil_firebase["nama"]} \nSlot Isi: {hasil_firebase["slot_isi"]}\nSlot Kosong: {hasil_firebase["slot_kosong"]}\n\n')
+        res += f'Nama: {hasil_firebase["nama"]} \nSlot Isi: {hasil_firebase["slot_isi"]}\nSlot Kosong: {hasil_firebase["slot_kosong"]}\n\n'
+    await update.message.reply_text(res)
 
-# async def abu_bakar_ali_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-#     hasil_firebase = fb_query('/Parkiran Abu Bakar Ali')
-#     await update.message.reply_text('Nama: ' + str(hasil_firebase['nama']) + '\nSlot Isi: ' + str(hasil_firebase['slot_isi']) + '\nSlot Kosong: ' + str(hasil_firebase['slot_kosong']))
+async def abu_bakar_ali_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    hasil_firebase = fb_query('/Parkiran Abu Bakar Ali')
+    await update.message.reply_text('Nama: ' + str(hasil_firebase['nama']) + '\nSlot Isi: ' + str(hasil_firebase['slot_isi']) + '\nSlot Kosong: ' + str(hasil_firebase['slot_kosong']))
 
-# async def ngabean_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-#     hasil_firebase = fb_query('/Parkiran Ngabean')
-#     await update.message.reply_text('Nama: ' + str(hasil_firebase['nama']) + '\nSlot Isi: ' + str(hasil_firebase['slot_isi']) + '\nSlot Kosong: ' + str(hasil_firebase['slot_kosong']))
+async def ngabean_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    hasil_firebase = fb_query('/Parkiran Ngabean')
+    await update.message.reply_text('Nama: ' + str(hasil_firebase['nama']) + '\nSlot Isi: ' + str(hasil_firebase['slot_isi']) + '\nSlot Kosong: ' + str(hasil_firebase['slot_kosong']))
 
-# async def senopati_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-#     hasil_firebase = fb_query('/Parkiran Senopati')
-#     await update.message.reply_text('Nama: ' + str(hasil_firebase['nama']) + '\nSlot Isi: ' + str(hasil_firebase['slot_isi']) + '\nSlot Kosong: ' + str(hasil_firebase['slot_kosong']))
+async def senopati_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    hasil_firebase = fb_query('/Parkiran Senopati')
+    await update.message.reply_text('Nama: ' + str(hasil_firebase['nama']) + '\nSlot Isi: ' + str(hasil_firebase['slot_isi']) + '\nSlot Kosong: ' + str(hasil_firebase['slot_kosong']))
 
 async def direction_command(update, context: ContextTypes.DEFAULT_TYPE):
     if update.message.location:
@@ -128,18 +135,14 @@ if __name__ == '__main__':
     app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
     app.add_handler(CommandHandler('start', start_command))
-    app.add_handler(CommandHandler('cek_lokasi',check_command))
-    app.add_handler(CommandHandler('pilih_lokasi',direction_command))
+    app.add_handler(CommandHandler('cekparkir_list',list_command))
+    app.add_handler(CommandHandler('help',help_command))
+    app.add_handler(CommandHandler('cekparkir_terdekat',direction_command))
     app.add_handler(MessageHandler(filters.LOCATION, direction_command))
-    # app.add_handler(CommandHandler('abu_bakar_ali', abu_bakar_ali_command))
-    # app.add_handler(CommandHandler('ngabean', ngabean_command))
-    # app.add_handler(CommandHandler('senopati', senopati_command))
-    # app.add_handler(CommandHandler('destination',destination))
-    #app.add_handler(CommandHandler('help', help_command))
-
-    #app.add_handler(MessageHandler(filters.TEXT, handle_message))
-
-    #app.add_error_handler(error)
+    app.add_handler(CommandHandler('abu_bakar_ali', abu_bakar_ali_command))
+    app.add_handler(CommandHandler('ngabean', ngabean_command))
+    app.add_handler(CommandHandler('senopati', senopati_command))
+    app.add_handler(CommandHandler('semua_parkiran', check_command))
 
     print('Polling...')
     app.run_polling(poll_interval=3)
