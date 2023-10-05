@@ -1,5 +1,5 @@
-FROM python:alpine
+FROM python:slim
 WORKDIR /app
-COPY . /app
+COPY .env app.py requirements.txt serviceAccountKey.json /app
 RUN pip install -r requirements.txt
-CMD python /app/app.py
+CMD python app.py

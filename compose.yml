@@ -1,4 +1,8 @@
 services:
   parkiran_bus_backend:
     image: parkiran_bus_backend
+    container_name: telegrambot_parkiran_bus
     build: .
+    volumes:
+      - ./app.py:/app/app.py
+      - ./api_out.json:/app/api_out.json

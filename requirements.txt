@@ -26,7 +26,7 @@ httplib2==0.22.0
 httpx==0.24.1
 idna==3.4
 msgpack==1.0.5
-numpy==1.26.0
+numpy==1.24.4
 pandas==2.0.3
 proto-plus==1.22.3
 protobuf==4.24.2
